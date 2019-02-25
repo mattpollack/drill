@@ -46,6 +46,9 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   private String fieldDelimiter;
   private String extension;
+  private String quote;
+  private String quoteEscaped;
+  private boolean quoteInvalidFields;
 
   private static String eol = System.getProperty("line.separator");
   private int index;
@@ -67,6 +70,9 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     this.prefix = writerOptions.get("prefix");
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
+    this.quote = writerOptions.get("quote");
+    this.quoteEscaped = this.quote + this.quote;
+    this.quoteInvalidFields = writerOptions.get("quoteInvalidFields") == "true";
 
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
@@ -108,7 +114,12 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   @Override
   public void addField(int fieldId, String value) throws IOException {
-    currentRecord.append(value + fieldDelimiter);
+    // insert and escape quotes if the result field would be invalid
+    if (quoteInvalidFields && (value.contains(fieldDelimiter) || value.contains(quote))) {
+      currentRecord.append(quote + value.replaceAll(quote, quoteEscaped) + quote + fieldDelimiter);
+    } else {
+      currentRecord.append(value + fieldDelimiter);
+    }
   }
 
   @Override
