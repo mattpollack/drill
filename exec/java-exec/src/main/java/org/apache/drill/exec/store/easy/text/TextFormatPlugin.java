@@ -125,7 +125,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     options.put("separator", getConfig().getFieldDelimiterAsString());
     options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig) writer.getStorageConfig()).getConnection());
     options.put("quote", getConfig().getQuoteAsString());
-    options.put("quoteInvalidFields", getConfig().isQuoteInvalidFields() ? "true" : "false");
     options.put("extension", getConfig().getExtensions().get(0));
 
     RecordWriter recordWriter = new DrillTextRecordWriter(context.getAllocator(), writer.getStorageStrategy());
@@ -145,7 +144,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     public char comment = '#';
     public boolean skipFirstLine = false;
     public boolean extractHeader = false;
-    public boolean quoteInvalidFields = false;
 
     public List<String> getExtensions() {
       return extensions;
@@ -195,10 +193,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       return skipFirstLine;
     }
 
-    public boolean isQuoteInvalidFields() {
-      return quoteInvalidFields;
-    }
-
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -211,7 +205,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       result = prime * result + quote;
       result = prime * result + (skipFirstLine ? 1231 : 1237);
       result = prime * result + (extractHeader ? 1231 : 1237);
-      result = prime * result + (quoteInvalidFields ? 1231 : 1237);
       return result;
     }
 
@@ -257,9 +250,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         return false;
       }
       if (extractHeader != other.extractHeader) {
-        return false;
-      }
-      if (quoteInvalidFields != other.quoteInvalidFields) {
         return false;
       }
       return true;

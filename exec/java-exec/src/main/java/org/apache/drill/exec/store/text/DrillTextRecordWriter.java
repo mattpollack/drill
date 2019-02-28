@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.StorageStrategy;
@@ -48,7 +49,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   private String extension;
   private String quote;
   private String quoteEscaped;
-  private boolean quoteInvalidFields;
+  private Pattern quotePattern;
 
   private static String eol = System.getProperty("line.separator");
   private int index;
@@ -72,7 +73,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     this.extension = writerOptions.get("extension");
     this.quote = writerOptions.get("quote");
     this.quoteEscaped = this.quote + this.quote;
-    this.quoteInvalidFields = writerOptions.get("quoteInvalidFields") == "true";
+    this.quotePattern = Pattern.compile(this.quote);
 
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
@@ -115,8 +116,8 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   @Override
   public void addField(int fieldId, String value) throws IOException {
     // insert and escape quotes if the result field would be invalid
-    if (quoteInvalidFields && (value.contains(fieldDelimiter) || value.contains(quote))) {
-      currentRecord.append(quote + value.replaceAll(quote, quoteEscaped) + quote + fieldDelimiter);
+    if (value.contains(fieldDelimiter) || value.contains(quote)) {
+      currentRecord.append(quote + quotePattern.matcher(value).replaceAll(quoteEscaped) + quote + fieldDelimiter);
     } else {
       currentRecord.append(value + fieldDelimiter);
     }
